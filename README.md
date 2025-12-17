@@ -65,7 +65,7 @@ Response: {
 
 ```bash
 # Clone repository
-git clone https://github.com/yourusername/ai-based-compiler-ast.git
+git clone https://github.com/chetancsk616/ai-based-compiler-ast.git
 cd ai-based-compiler-ast
 
 # Install dependencies
@@ -147,7 +147,6 @@ curl -X POST http://localhost:4000/api/submit \
 
 ### Response Format
 
-```json
 {
   "score": 85,
   "marks": {
@@ -169,11 +168,10 @@ curl -X POST http://localhost:4000/api/submit \
 
 Key documentation files:
 
-- **[Architecture](docs/ARCHITECTURE.md)** - System design and components
-- **[API Reference](docs/API.md)** - Endpoint documentation
-- **[AST Pipeline](docs/AST_PIPELINE.md)** - Feature extraction details
-- **[Deployment](docs/DEPLOYMENT.md)** - Production deployment guide
-- **[Contributing](CONTRIBUTING.md)** - Contribution guidelines
+- **[API Reference](API_SUBMIT_ENDPOINT.md)** - Endpoint documentation
+- **[AST Pipeline](server/ast/README.md)** - Feature extraction details
+- **[Deployment](RENDER_DEPLOYMENT.md)** - Production deployment guide
+- **[Implementation Status](IMPLEMENTATION_COMPLETE.md)** - Project status
 
 ---
 
@@ -298,22 +296,22 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines on:
 
 ## 📝 License
 
-[Specify your license - MIT, GPL, etc.]
+MIT License - See LICENSE file for details
 
 ---
 
 ## 👥 Authors
 
-- **Project Lead**: [Your Name]
-- **AST Implementation**: [Team Members]
-- **Testing & QA**: [Team Members]
+- **Project Lead**: Chetan
+- **AST Implementation**: AI-Based Compiler Team
+- **Testing & QA**: Full Team
 
 ---
 
 ## 🆘 Support
 
 ### Documentation
-- Check the `docs/` folder
+- Check the project root for markdown guides
 - Review code comments
 - See inline documentation
 
@@ -323,7 +321,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines on:
 - Attach relevant logs
 
 ### Questions
-- Open a Discussion
+- Open a GitHub Discussion
 - Tag with appropriate label
 - Include context
 
@@ -386,16 +384,15 @@ ai-based-compiler-ast/
 
 ## 🎓 Learning Resources
 
-- [AST Concepts](docs/AST_CONCEPTS.md)
-- [Complexity Analysis Guide](docs/COMPLEXITY_GUIDE.md)
-- [Code Examples](examples/)
-- [Architecture Deep Dive](docs/ARCHITECTURE_DEEP_DIVE.md)
+- [AST Concepts](server/ast/README.md)
+- [Complexity Analysis Guide](COMPLEXITY_EVALUATION_GUIDE.md)
+- [Implementation Details](IMPLEMENTATION_COMPLETE.md)
 
 ---
 
 ## 📞 Contact
 
-- **Email**: [your-email@example.com]
+- **GitHub**: [AI-Based Compiler AST](https://github.com/chetancsk616/ai-based-compiler-ast)
 - **Issues**: [GitHub Issues](../../issues)
 - **Discussions**: [GitHub Discussions](../../discussions)
 
@@ -404,5 +401,6 @@ ai-based-compiler-ast/
 **Last Updated**: December 18, 2025  
 **Version**: 1.0.0  
 **Status**: ✅ Production Ready
-#   a i - b a s e d - c o m p i l e r - a s t  
+#   a i - b a s e d - c o m p i l e r - a s t 
+ 
  
