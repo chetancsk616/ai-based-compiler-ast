@@ -754,6 +754,7 @@ Be specific, educational, and constructive. Reference actual test cases, complex
         aiExplanation: aiExplanation || {},
         securityViolations: securityEvents || [],
         referenceLogic: referenceLogic || {},
+        difficulty: referenceLogic?.difficulty || 'Medium',
       };
 
       finalVerdict = generateFinalVerdict(verdictInput);

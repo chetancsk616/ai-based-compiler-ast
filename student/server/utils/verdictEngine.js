@@ -105,9 +105,10 @@ function calculateTrustScore(
  * @param {Object} ruleVerdictData - Results from rule-based logic comparison
  * @param {Object} aiVerdictData - Results from AI logic verification
  * @param {Object} testVerdictData - Results from test execution
+ * @param {string} difficulty - Question difficulty level (easy/medium/hard)
  * @returns {string} - Final verdict: "CORRECT", "ACCEPTABLE", "NEEDS_IMPROVEMENT", or "INCORRECT"
  */
-function synthesizeVerdict(ruleVerdictData, aiVerdictData, testVerdictData) {
+function synthesizeVerdict(ruleVerdictData, aiVerdictData, testVerdictData, difficulty = 'medium') {
   // Count positive indicators
   // Decision is based ONLY on rule-based analysis and test results
   // AI verdict is used for explanation/reasoning only, not for decision logic
@@ -119,7 +120,12 @@ function synthesizeVerdict(ruleVerdictData, aiVerdictData, testVerdictData) {
     if (ruleVerdictData.algorithmMatch === 'FULL') {
       positiveIndicators += 2;
     } else if (ruleVerdictData.algorithmMatch === 'PARTIAL') {
-      positiveIndicators += 1;
+      // For easy problems with PARTIAL match, be more lenient
+      if (difficulty?.toLowerCase() === 'easy') {
+        positiveIndicators += 1.5; // Give more credit
+      } else {
+        positiveIndicators += 1;
+      }
     }
     totalIndicators += 2;
 
@@ -543,6 +549,7 @@ function generateRecommendations(
  * @param {Object} params.testVerdictData - Results from test execution
  * @param {Array} params.securityViolations - Security events detected during submission
  * @param {Object} params.aiExplanation - AI-generated explanation of the verdict
+ * @param {string} params.difficulty - Question difficulty level (easy/medium/hard)
  * @returns {Object} - Final verdict object
  */
 function generateFinalVerdict(params) {
@@ -552,6 +559,7 @@ function generateFinalVerdict(params) {
     testVerdictData,
     securityViolations,
     aiExplanation,
+    difficulty = 'medium',
   } = params;
 
   // Calculate components
@@ -564,7 +572,8 @@ function generateFinalVerdict(params) {
   const finalVerdict = synthesizeVerdict(
     ruleVerdictData,
     aiVerdictData,
-    testVerdictData
+    testVerdictData,
+    difficulty
   );
   const issues = aggregateIssues(
     ruleVerdictData,

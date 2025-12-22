@@ -660,27 +660,63 @@ function compareAgainstReference(studentFeatures, questionId) {
     }
   }
 
-  // Calculate logic score (0-100) based on comparison results
-  // Start at 100, deduct for issues
+  // Calculate logic score (0-100) based on comparison results with difficulty awareness
+  // Start at 100, deduct for issues based on difficulty level
   let logicScore = 100;
-
+  
+  // Get difficulty level (default to Medium if not specified)
+  const difficulty = referenceLogic?.difficulty?.toLowerCase() || 'medium';
+  
   // Deduct for critical issues
   const criticalIssues = comparison.issues.filter((i) => i.severity === 'high');
-  logicScore -= criticalIssues.length * 20; // -20 per critical issue
+  logicScore -= criticalIssues.length * 20; // -20 per critical issue (always strict)
 
-  // Deduct for medium issues
+  // Deduct for medium issues (adjust based on difficulty)
   const mediumIssues = comparison.issues.filter((i) => i.severity === 'medium');
-  logicScore -= mediumIssues.length * 10; // -10 per medium issue
+  if (difficulty === 'easy') {
+    logicScore -= mediumIssues.length * 5; // Be lenient for easy problems
+  } else if (difficulty === 'hard') {
+    logicScore -= mediumIssues.length * 15; // Be strict for hard problems
+  } else {
+    logicScore -= mediumIssues.length * 10; // Standard deduction for medium
+  }
 
-  // Deduct for warnings
-  logicScore -= comparison.warnings.length * 5; // -5 per warning
+  // Deduct for warnings (adjust significantly based on difficulty)
+  if (difficulty === 'easy') {
+    // For easy problems, ignore warnings if code is simple and works
+    if (comparison.successes.length > 0 && comparison.issues.length === 0) {
+      // No deduction for warnings on easy problems if there are successes and no issues
+      logicScore -= 0;
+    } else {
+      logicScore -= comparison.warnings.length * 2; // Minimal deduction
+    }
+  } else if (difficulty === 'hard') {
+    logicScore -= comparison.warnings.length * 7; // Stricter for hard problems
+  } else {
+    logicScore -= comparison.warnings.length * 4; // Moderate for medium problems
+  }
 
   // Ensure score is between 0-100
   logicScore = Math.max(0, Math.min(100, logicScore));
+  
+  // Special case: For Easy problems with simple correct solutions, boost the score
+  if (difficulty === 'easy') {
+    // If there are no critical issues and at least one success, ensure minimum 90% score
+    if (criticalIssues.length === 0 && comparison.successes.length > 0) {
+      logicScore = Math.max(logicScore, 90);
+    }
+    // If complexity matches perfectly and there are successes, give full marks
+    if (comparison.timeComplexityMatch && comparison.spaceComplexityMatch && comparison.successes.length > 0 && criticalIssues.length === 0) {
+      logicScore = 100;
+    }
+  }
 
-  // Set algorithmMatch level
+  // Set algorithmMatch level with difficulty awareness
   if (comparison.issues.length === 0) {
     comparison.algorithmMatch = 'FULL';
+  } else if (difficulty === 'easy' && comparison.issues.length <= 3 && criticalIssues.length === 0) {
+    // For easy problems, be more forgiving
+    comparison.algorithmMatch = 'PARTIAL';
   } else if (comparison.issues.length <= 2) {
     comparison.algorithmMatch = 'PARTIAL';
   } else {
