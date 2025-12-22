@@ -10,6 +10,14 @@ npm-debug.log
 .vscode/
 server/tmp/
 
+# Firebase service account credentials (NEVER commit!)
+server/config/serviceAccountKey.json
+admin/server/config/serviceAccountKey.json
+student/server/config/serviceAccountKey.json
+serviceAccountKey.json
+aicompiler-*.json
+*-firebase-adminsdk-*.json
+
 # Exclude organization folders (not for GitHub)
 unused/
 markdown/

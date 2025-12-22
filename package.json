@@ -4,15 +4,29 @@
   "private": true,
   "workspaces": [
     "client",
-    "server"
+    "server",
+    "admin-app",
+    "student-app",
+    "admin-server",
+    "student-server"
   ],
   "scripts": {
-    "dev": "concurrently \"npm run dev --prefix client\" \"npm run dev --prefix server\"",
-    "build": "npm run build --prefix client",
-    "start": "node server/index.js",
-    "lint": "npm run -w client lint && npm run -w server lint",
-    "lint:fix": "npm run -w client lint:fix && npm run -w server lint:fix",
-    "format": "npm run -w client format && npm run -w server format"
+    "dev": "concurrently \"npm run dev:login\" \"npm run dev:admin\" \"npm run dev:student\"",
+    "dev:login": "cd login && npm run dev",
+    "dev:admin": "cd admin && npm run dev",
+    "dev:student": "cd student && npm run dev",
+    "dev:login-only": "cd login && npm run dev",
+    "dev:admin-only": "cd admin && npm run dev",
+    "dev:student-only": "cd student && npm run dev",
+    "build": "npm run build:login && npm run build:admin && npm run build:student",
+    "build:login": "cd login && npm run build",
+    "build:admin": "cd admin/client && npm run build",
+    "build:student": "cd student/client && npm run build",
+    "start": "concurrently \"npm run start:login\" \"npm run start:admin\" \"npm run start:student\"",
+    "start:login": "cd login && npm run preview",
+    "start:admin": "cd admin/server && npm start",
+    "start:student": "cd student/server && npm start",
+    "install:all": "cd login && npm install && cd ../admin && npm install && cd client && npm install && cd ../server && npm install && cd ../../student && npm install && cd client && npm install && cd ../server && npm install"
   },
   "devDependencies": {
     "husky": "^8.0.0",
