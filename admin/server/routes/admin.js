@@ -7,6 +7,46 @@ const fs = require('fs').promises;
 const path = require('path');
 const { authenticateUser, requireAdmin, grantAdminAccess, revokeAdminAccess } = require('../middleware/adminAuth');
 
+// Resolve question storage location (prefer admin/client/src/questions.json, fallback to student/client/src/questions.json)
+const QUESTION_PATHS = [
+  path.join(__dirname, '../../client/src/questions.json'),
+  path.join(__dirname, '../../../student/client/src/questions.json'),
+];
+
+async function getQuestionsPath() {
+  for (const candidate of QUESTION_PATHS) {
+    try {
+      await fs.access(candidate);
+      return candidate;
+    } catch (err) {
+      // continue to next candidate
+    }
+  }
+  throw new Error('questions.json not found in expected locations');
+}
+
+async function readQuestions() {
+  const questionsPath = await getQuestionsPath();
+  const questionsData = await fs.readFile(questionsPath, 'utf8');
+  const parsed = JSON.parse(questionsData);
+
+  const normalized = Array.isArray(parsed)
+    ? parsed
+    : Array.isArray(parsed.questions)
+      ? parsed.questions
+      : [];
+
+  const write = async (updatedQuestions) => {
+    const payload = Array.isArray(parsed)
+      ? updatedQuestions
+      : { ...parsed, questions: updatedQuestions };
+
+    await fs.writeFile(questionsPath, JSON.stringify(payload, null, 2));
+  };
+
+  return { questions: normalized, questionsPath, write };
+}
+
 // Apply authentication and admin middleware to all routes
 router.use(authenticateUser);
 router.use(requireAdmin);
@@ -24,9 +64,11 @@ router.get('/questions', async (req, res) => {
     const { search, difficulty, tag } = req.query;
     
     // Read questions from file
-    const questionsPath = path.join(__dirname, '../../client/src/questions.json');
-    const questionsData = await fs.readFile(questionsPath, 'utf8');
-    let questions = JSON.parse(questionsData);
+    const { questions: rawQuestions } = await readQuestions();
+    let questions = rawQuestions.map((q) => ({
+      ...q,
+      requiresHiddenTests: q?.requiresHiddenTests !== false,
+    }));
     
     // Apply filters
     if (search) {
@@ -65,11 +107,12 @@ router.get('/questions/:id', async (req, res) => {
     const questionId = parseInt(req.params.id);
     
     // Read questions
-    const questionsPath = path.join(__dirname, '../../client/src/questions.json');
-    const questionsData = await fs.readFile(questionsPath, 'utf8');
-    const questions = JSON.parse(questionsData);
+    const { questions } = await readQuestions();
     
     const question = questions.find(q => q.id === questionId);
+    if (question) {
+      question.requiresHiddenTests = question?.requiresHiddenTests !== false;
+    }
     
     if (!question) {
       return res.status(404).json({ error: 'Question not found' });
@@ -110,9 +153,7 @@ router.post('/questions', async (req, res) => {
     }
     
     // Read existing questions
-    const questionsPath = path.join(__dirname, '../../client/src/questions.json');
-    const questionsData = await fs.readFile(questionsPath, 'utf8');
-    const questions = JSON.parse(questionsData);
+    const { questions, write } = await readQuestions();
     
     // Generate new ID
     const newId = questions.length > 0 
@@ -127,6 +168,7 @@ router.post('/questions', async (req, res) => {
       difficulty: difficulty || 'Medium',
       tags: tags || [],
       testCases: testCases || [],
+      requiresHiddenTests: req.body?.requiresHiddenTests !== false,
       createdAt: new Date().toISOString(),
       createdBy: req.user.email
     };
@@ -134,7 +176,7 @@ router.post('/questions', async (req, res) => {
     questions.push(newQuestion);
     
     // Save questions
-    await fs.writeFile(questionsPath, JSON.stringify(questions, null, 2));
+    await write(questions);
     
     // Save reference logic if provided
     if (referenceLogic) {
@@ -163,9 +205,7 @@ router.put('/questions/:id', async (req, res) => {
     const { title, description, difficulty, tags, testCases, referenceLogic } = req.body;
     
     // Read questions
-    const questionsPath = path.join(__dirname, '../../client/src/questions.json');
-    const questionsData = await fs.readFile(questionsPath, 'utf8');
-    let questions = JSON.parse(questionsData);
+    const { questions, write } = await readQuestions();
     
     const questionIndex = questions.findIndex(q => q.id === questionId);
     
@@ -181,12 +221,16 @@ router.put('/questions/:id', async (req, res) => {
       difficulty: difficulty || questions[questionIndex].difficulty,
       tags: tags !== undefined ? tags : questions[questionIndex].tags,
       testCases: testCases !== undefined ? testCases : questions[questionIndex].testCases,
+      requiresHiddenTests:
+        req.body?.requiresHiddenTests !== undefined
+          ? req.body.requiresHiddenTests !== false
+          : questions[questionIndex].requiresHiddenTests !== false,
       updatedAt: new Date().toISOString(),
       updatedBy: req.user.email
     };
     
     // Save questions
-    await fs.writeFile(questionsPath, JSON.stringify(questions, null, 2));
+    await write(questions);
     
     // Update reference logic if provided
     if (referenceLogic) {
@@ -214,9 +258,7 @@ router.delete('/questions/:id', async (req, res) => {
     const questionId = parseInt(req.params.id);
     
     // Read questions
-    const questionsPath = path.join(__dirname, '../../client/src/questions.json');
-    const questionsData = await fs.readFile(questionsPath, 'utf8');
-    let questions = JSON.parse(questionsData);
+    const { questions, write } = await readQuestions();
     
     const questionIndex = questions.findIndex(q => q.id === questionId);
     
@@ -228,7 +270,7 @@ router.delete('/questions/:id', async (req, res) => {
     questions.splice(questionIndex, 1);
     
     // Save questions
-    await fs.writeFile(questionsPath, JSON.stringify(questions, null, 2));
+    await write(questions);
     
     // Try to delete reference logic if exists
     try {
@@ -385,9 +427,7 @@ router.post('/users/:uid/revoke-admin', async (req, res) => {
 router.get('/stats', async (req, res) => {
   try {
     // Read questions count
-    const questionsPath = path.join(__dirname, '../../client/src/questions.json');
-    const questionsData = await fs.readFile(questionsPath, 'utf8');
-    const questions = JSON.parse(questionsData);
+    const { questions } = await readQuestions();
     
     // Read users count
     const usersPath = path.join(__dirname, '../../client/users.json');

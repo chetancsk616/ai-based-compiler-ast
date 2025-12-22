@@ -94,6 +94,18 @@ function normalizeLogicSchema(logic, sourceLabel) {
     );
   }
 
+  // Default hidden tests flag to true unless explicitly disabled
+  if (!Object.prototype.hasOwnProperty.call(logic, 'requiresHiddenTests')) {
+    logic.requiresHiddenTests = true;
+  } else {
+    logic.requiresHiddenTests = logic.requiresHiddenTests !== false;
+  }
+
+  // Ensure testCases is always an array (even if empty) for downstream consumers
+  if (!Array.isArray(logic.testCases)) {
+    logic.testCases = [];
+  }
+
   return logic;
 }
 

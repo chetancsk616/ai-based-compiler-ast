@@ -14,7 +14,11 @@
           "output": "Hello, World!"
         }
       ],
-      "languages": ["python3", "node", "c"],
+      "languages": [
+        "python3",
+        "node",
+        "c"
+      ],
       "solutions": {
         "python3": "print(\"Hello, World!\")",
         "node": "console.log(\"Hello, World!\");",
@@ -25,7 +29,8 @@
           "input": "",
           "output": "Hello, World!"
         }
-      ]
+      ],
+      "requiresHiddenTests": true
     },
     {
       "id": 2,
@@ -45,7 +50,11 @@
           "output": "30"
         }
       ],
-      "languages": ["python3", "node", "c"],
+      "languages": [
+        "python3",
+        "node",
+        "c"
+      ],
       "solutions": {
         "python3": "a = int(input())\nb = int(input())\nprint(a + b)",
         "node": "const readline = require('readline');\nconst rl = readline.createInterface({ input: process.stdin });\nlet inputs = [];\nrl.on('line', (line) => {\n  inputs.push(parseInt(line));\n  if (inputs.length === 2) {\n    console.log(inputs[0] + inputs[1]);\n    rl.close();\n  }\n});",
@@ -64,7 +73,8 @@
           "input": "100\n50",
           "output": "150"
         }
-      ]
+      ],
+      "requiresHiddenTests": true
     },
     {
       "id": 3,
@@ -84,7 +94,11 @@
           "output": "2"
         }
       ],
-      "languages": ["python3", "node", "c"],
+      "languages": [
+        "python3",
+        "node",
+        "c"
+      ],
       "solutions": {
         "python3": "n = input().strip()\nprint(len(n))",
         "node": "const readline = require('readline');\nconst rl = readline.createInterface({ input: process.stdin });\nrl.on('line', (line) => {\n  console.log(line.trim().length);\n  rl.close();\n});",
@@ -103,7 +117,8 @@
           "input": "1000",
           "output": "4"
         }
-      ]
+      ],
+      "requiresHiddenTests": true
     },
     {
       "id": 4,
@@ -123,7 +138,11 @@
           "output": "Odd"
         }
       ],
-      "languages": ["python3", "node", "c"],
+      "languages": [
+        "python3",
+        "node",
+        "c"
+      ],
       "solutions": {
         "python3": "n = int(input())\nif n % 2 == 0:\n    print(\"Even\")\nelse:\n    print(\"Odd\")",
         "node": "const readline = require('readline');\nconst rl = readline.createInterface({ input: process.stdin });\nrl.on('line', (line) => {\n  const n = parseInt(line);\n  console.log(n % 2 === 0 ? \"Even\" : \"Odd\");\n  rl.close();\n});",
@@ -142,7 +161,8 @@
           "input": "0",
           "output": "Even"
         }
-      ]
+      ],
+      "requiresHiddenTests": true
     },
     {
       "id": 5,
@@ -162,7 +182,11 @@
           "output": "720"
         }
       ],
-      "languages": ["python3", "node", "c"],
+      "languages": [
+        "python3",
+        "node",
+        "c"
+      ],
       "solutions": {
         "python3": "n = int(input())\nfact = 1\nfor i in range(1, n + 1):\n    fact *= i\nprint(fact)",
         "node": "const readline = require('readline');\nconst rl = readline.createInterface({ input: process.stdin });\nrl.on('line', (line) => {\n  const n = parseInt(line);\n  let fact = 1;\n  for (let i = 1; i <= n; i++)\n    fact *= i;\n  console.log(fact);\n  rl.close();\n});",
@@ -181,7 +205,8 @@
           "input": "6",
           "output": "720"
         }
-      ]
+      ],
+      "requiresHiddenTests": true
     },
     {
       "id": 6,
@@ -189,7 +214,12 @@
       "difficulty": "Medium",
       "description": "Calculate the height of a binary tree. The height is the number of edges on the longest path from root to leaf.",
       "prompt": "Implement a function to find the height of a binary tree using recursion",
-      "languages": ["python3", "node", "c"]
+      "languages": [
+        "python3",
+        "node",
+        "c"
+      ],
+      "requiresHiddenTests": true
     },
     {
       "id": 7,
@@ -197,7 +227,12 @@
       "difficulty": "Medium",
       "description": "Perform inorder traversal of a binary tree (left-root-right order).",
       "prompt": "Traverse a binary tree in inorder and print the sequence",
-      "languages": ["python3", "node", "c"]
+      "languages": [
+        "python3",
+        "node",
+        "c"
+      ],
+      "requiresHiddenTests": true
     },
     {
       "id": 8,
@@ -205,7 +240,12 @@
       "difficulty": "Medium",
       "description": "Traverse a graph level by level using Breadth-First Search algorithm.",
       "prompt": "Implement BFS to traverse graph starting from a given vertex",
-      "languages": ["python3", "node", "c"]
+      "languages": [
+        "python3",
+        "node",
+        "c"
+      ],
+      "requiresHiddenTests": true
     },
     {
       "id": 9,
@@ -213,7 +253,12 @@
       "difficulty": "Medium",
       "description": "Traverse a graph exploring as far as possible before backtracking using Depth-First Search.",
       "prompt": "Implement DFS to traverse graph starting from a given vertex",
-      "languages": ["python3", "node", "c"]
+      "languages": [
+        "python3",
+        "node",
+        "c"
+      ],
+      "requiresHiddenTests": true
     },
     {
       "id": 10,
@@ -221,7 +266,12 @@
       "difficulty": "Medium",
       "description": "Calculate the nth Fibonacci number efficiently using dynamic programming with memoization.",
       "prompt": "Find nth Fibonacci number in O(n) time using DP",
-      "languages": ["python3", "node", "c"]
+      "languages": [
+        "python3",
+        "node",
+        "c"
+      ],
+      "requiresHiddenTests": true
     },
     {
       "id": 11,
@@ -229,7 +279,12 @@
       "difficulty": "Hard",
       "description": "Find the length of the longest common subsequence between two strings using dynamic programming.",
       "prompt": "Calculate LCS length of two strings using 2D DP table",
-      "languages": ["python3", "node", "c"]
+      "languages": [
+        "python3",
+        "node",
+        "c"
+      ],
+      "requiresHiddenTests": true
     },
     {
       "id": 12,
@@ -237,7 +292,12 @@
       "difficulty": "Medium",
       "description": "Reverse a singly linked list in-place by changing node pointers.",
       "prompt": "Reverse linked list using iterative approach with O(1) space",
-      "languages": ["python3", "node", "c"]
+      "languages": [
+        "python3",
+        "node",
+        "c"
+      ],
+      "requiresHiddenTests": true
     },
     {
       "id": 13,
@@ -245,7 +305,12 @@
       "difficulty": "Medium",
       "description": "Detect if a linked list contains a cycle using Floyd's cycle detection algorithm (slow and fast pointers).",
       "prompt": "Use two pointers to detect cycle in O(1) space",
-      "languages": ["python3", "node", "c"]
+      "languages": [
+        "python3",
+        "node",
+        "c"
+      ],
+      "requiresHiddenTests": true
     },
     {
       "id": 14,
@@ -253,7 +318,12 @@
       "difficulty": "Easy",
       "description": "Check if a string has valid matching parentheses using a stack data structure.",
       "prompt": "Validate brackets (), {}, [] using stack",
-      "languages": ["python3", "node", "c"]
+      "languages": [
+        "python3",
+        "node",
+        "c"
+      ],
+      "requiresHiddenTests": true
     },
     {
       "id": 15,
@@ -261,7 +331,12 @@
       "difficulty": "Medium",
       "description": "Design a stack that supports push, pop, top, and retrieving minimum element in O(1) time.",
       "prompt": "Implement stack with constant time getMin operation",
-      "languages": ["python3", "node", "c"]
+      "languages": [
+        "python3",
+        "node",
+        "c"
+      ],
+      "requiresHiddenTests": true
     },
     {
       "id": 16,
@@ -269,7 +344,12 @@
       "difficulty": "Medium",
       "description": "Implement a FIFO queue using only two LIFO stacks.",
       "prompt": "Create queue with enqueue, dequeue using two stacks",
-      "languages": ["python3", "node", "c"]
+      "languages": [
+        "python3",
+        "node",
+        "c"
+      ],
+      "requiresHiddenTests": true
     },
     {
       "id": 17,
@@ -277,7 +357,12 @@
       "difficulty": "Medium",
       "description": "Implement a fixed-size circular queue with efficient space utilization using array.",
       "prompt": "Design circular queue with O(1) operations",
-      "languages": ["python3", "node", "c"]
+      "languages": [
+        "python3",
+        "node",
+        "c"
+      ],
+      "requiresHiddenTests": true
     },
     {
       "id": 18,
@@ -285,7 +370,12 @@
       "difficulty": "Medium",
       "description": "Find the kth largest element in an unsorted array using min heap or quick select.",
       "prompt": "Find kth largest in O(n log k) using heap",
-      "languages": ["python3", "node", "c"]
+      "languages": [
+        "python3",
+        "node",
+        "c"
+      ],
+      "requiresHiddenTests": true
     },
     {
       "id": 19,
@@ -293,7 +383,12 @@
       "difficulty": "Hard",
       "description": "Merge k sorted linked lists into one sorted list using min heap for efficiency.",
       "prompt": "Merge multiple sorted lists in O(N log k) time",
-      "languages": ["python3", "node", "c"]
+      "languages": [
+        "python3",
+        "node",
+        "c"
+      ],
+      "requiresHiddenTests": true
     },
     {
       "id": 20,
@@ -301,7 +396,12 @@
       "difficulty": "Medium",
       "description": "Sort an array using merge sort algorithm with divide and conquer approach.",
       "prompt": "Implement merge sort with O(n log n) time",
-      "languages": ["python3", "node", "c"]
+      "languages": [
+        "python3",
+        "node",
+        "c"
+      ],
+      "requiresHiddenTests": true
     },
     {
       "id": 21,
@@ -309,7 +409,12 @@
       "difficulty": "Medium",
       "description": "Sort an array using quick sort algorithm with partitioning and pivot selection.",
       "prompt": "Implement quick sort with in-place partitioning",
-      "languages": ["python3", "node", "c"]
+      "languages": [
+        "python3",
+        "node",
+        "c"
+      ],
+      "requiresHiddenTests": true
     },
     {
       "id": 22,
@@ -317,7 +422,12 @@
       "difficulty": "Easy",
       "description": "Find two numbers in an array that add up to a target sum using hash table for O(n) solution.",
       "prompt": "Find indices of two numbers summing to target",
-      "languages": ["python3", "node", "c"]
+      "languages": [
+        "python3",
+        "node",
+        "c"
+      ],
+      "requiresHiddenTests": true
     },
     {
       "id": 23,
@@ -325,7 +435,12 @@
       "difficulty": "Medium",
       "description": "Group anagrams together from a list of strings using hash table with sorted string keys.",
       "prompt": "Group strings that are anagrams of each other",
-      "languages": ["python3", "node", "c"]
+      "languages": [
+        "python3",
+        "node",
+        "c"
+      ],
+      "requiresHiddenTests": true
     },
     {
       "id": 24,
@@ -333,7 +448,12 @@
       "difficulty": "Medium",
       "description": "Generate all permutations of a given array using recursive backtracking algorithm.",
       "prompt": "Find all permutations using backtracking",
-      "languages": ["python3", "node", "c"]
+      "languages": [
+        "python3",
+        "node",
+        "c"
+      ],
+      "requiresHiddenTests": true
     },
     {
       "id": 25,
@@ -341,7 +461,12 @@
       "difficulty": "Hard",
       "description": "Solve N-Queens puzzle by placing n queens on n×n chessboard so no two queens attack each other.",
       "prompt": "Use backtracking with constraint checking",
-      "languages": ["python3", "node", "c"]
+      "languages": [
+        "python3",
+        "node",
+        "c"
+      ],
+      "requiresHiddenTests": true
     },
     {
       "id": 26,
@@ -349,7 +474,12 @@
       "difficulty": "Easy",
       "description": "Search for a target element in a sorted array using binary search algorithm.",
       "prompt": "Find target in sorted array with O(log n) time",
-      "languages": ["python3", "node", "c"]
+      "languages": [
+        "python3",
+        "node",
+        "c"
+      ],
+      "requiresHiddenTests": true
     },
     {
       "id": 27,
@@ -357,7 +487,12 @@
       "difficulty": "Medium",
       "description": "Find starting and ending position of target in sorted array with duplicates using modified binary search.",
       "prompt": "Find both bounds in O(log n) using two binary searches",
-      "languages": ["python3", "node", "c"]
+      "languages": [
+        "python3",
+        "node",
+        "c"
+      ],
+      "requiresHiddenTests": true
     },
     {
       "id": 28,
@@ -365,7 +500,12 @@
       "difficulty": "Medium",
       "description": "Find maximum sum of any contiguous subarray of size k using sliding window technique.",
       "prompt": "Use sliding window for O(n) solution",
-      "languages": ["python3", "node", "c"]
+      "languages": [
+        "python3",
+        "node",
+        "c"
+      ],
+      "requiresHiddenTests": true
     },
     {
       "id": 29,
@@ -373,7 +513,12 @@
       "difficulty": "Medium",
       "description": "Find length of longest substring without repeating characters using sliding window with hash set.",
       "prompt": "Use variable sliding window technique",
-      "languages": ["python3", "node", "c"]
+      "languages": [
+        "python3",
+        "node",
+        "c"
+      ],
+      "requiresHiddenTests": true
     },
     {
       "id": 30,
@@ -381,7 +526,12 @@
       "difficulty": "Medium",
       "description": "Find maximum water container area using two pointer technique from both ends.",
       "prompt": "Use two pointers to find max area in O(n)",
-      "languages": ["python3", "node", "c"]
+      "languages": [
+        "python3",
+        "node",
+        "c"
+      ],
+      "requiresHiddenTests": true
     },
     {
       "id": 31,
@@ -389,7 +539,12 @@
       "difficulty": "Medium",
       "description": "Find all unique triplets that sum to zero using sorting and two pointers.",
       "prompt": "Find triplets summing to zero in O(n²) time",
-      "languages": ["python3", "node", "c"]
+      "languages": [
+        "python3",
+        "node",
+        "c"
+      ],
+      "requiresHiddenTests": true
     },
     {
       "id": 32,
@@ -397,7 +552,12 @@
       "difficulty": "Medium",
       "description": "Implement prefix tree (Trie) supporting insert, search, and startsWith operations.",
       "prompt": "Build Trie data structure with O(m) operations",
-      "languages": ["python3", "node", "c"]
+      "languages": [
+        "python3",
+        "node",
+        "c"
+      ],
+      "requiresHiddenTests": true
     },
     {
       "id": 33,
@@ -405,7 +565,12 @@
       "difficulty": "Hard",
       "description": "Find all dictionary words that exist in 2D board using Trie with DFS backtracking.",
       "prompt": "Combine Trie with backtracking for efficient search",
-      "languages": ["python3", "node", "c"]
+      "languages": [
+        "python3",
+        "node",
+        "c"
+      ],
+      "requiresHiddenTests": true
     },
     {
       "id": 34,
@@ -413,7 +578,12 @@
       "difficulty": "Medium",
       "description": "Select maximum number of non-overlapping activities using greedy approach by sorting end times.",
       "prompt": "Greedy activity selection in O(n log n)",
-      "languages": ["python3", "node", "c"]
+      "languages": [
+        "python3",
+        "node",
+        "c"
+      ],
+      "requiresHiddenTests": true
     },
     {
       "id": 35,
@@ -421,7 +591,12 @@
       "difficulty": "Hard",
       "description": "Build optimal Huffman tree for data compression using greedy algorithm with min heap.",
       "prompt": "Create prefix-free encoding tree greedily",
-      "languages": ["python3", "node", "c"]
+      "languages": [
+        "python3",
+        "node",
+        "c"
+      ],
+      "requiresHiddenTests": true
     },
     {
       "id": 36,
@@ -429,7 +604,12 @@
       "difficulty": "Easy",
       "description": "Count number of 1 bits in binary representation using bit manipulation techniques.",
       "prompt": "Use Brian Kernighan's algorithm or bit operations",
-      "languages": ["python3", "node", "c"]
+      "languages": [
+        "python3",
+        "node",
+        "c"
+      ],
+      "requiresHiddenTests": true
     },
     {
       "id": 37,
@@ -437,7 +617,12 @@
       "difficulty": "Easy",
       "description": "Find element appearing once when all others appear twice using XOR properties.",
       "prompt": "Use XOR for O(1) space solution",
-      "languages": ["python3", "node", "c"]
+      "languages": [
+        "python3",
+        "node",
+        "c"
+      ],
+      "requiresHiddenTests": true
     },
     {
       "id": 38,
@@ -445,7 +630,12 @@
       "difficulty": "Medium",
       "description": "Find maximum sum of contiguous subarray using Kadane's algorithm.",
       "prompt": "Implement Kadane's algorithm for O(n) solution",
-      "languages": ["python3", "node", "c"]
+      "languages": [
+        "python3",
+        "node",
+        "c"
+      ],
+      "requiresHiddenTests": true
     },
     {
       "id": 39,
@@ -453,7 +643,12 @@
       "difficulty": "Hard",
       "description": "Count inversions in array using modified merge sort divide and conquer approach.",
       "prompt": "Count inversions during merge sort in O(n log n)",
-      "languages": ["python3", "node", "c"]
+      "languages": [
+        "python3",
+        "node",
+        "c"
+      ],
+      "requiresHiddenTests": true
     },
     {
       "id": 40,
@@ -461,7 +656,12 @@
       "difficulty": "Medium",
       "description": "Detect cycle in undirected graph using Union Find (Disjoint Set Union) data structure.",
       "prompt": "Use path compression and union by rank",
-      "languages": ["python3", "node", "c"]
+      "languages": [
+        "python3",
+        "node",
+        "c"
+      ],
+      "requiresHiddenTests": true
     },
     {
       "id": 41,
@@ -469,7 +669,12 @@
       "difficulty": "Medium",
       "description": "Count connected components in undirected graph using Union Find data structure.",
       "prompt": "Track component count with union operations",
-      "languages": ["python3", "node", "c"]
+      "languages": [
+        "python3",
+        "node",
+        "c"
+      ],
+      "requiresHiddenTests": true
     },
     {
       "id": 42,
@@ -477,7 +682,12 @@
       "difficulty": "Medium",
       "description": "Traverse matrix in spiral order (clockwise from outside to inside) using boundary simulation.",
       "prompt": "Maintain four boundaries and traverse in spiral",
-      "languages": ["python3", "node", "c"]
+      "languages": [
+        "python3",
+        "node",
+        "c"
+      ],
+      "requiresHiddenTests": true
     },
     {
       "id": 43,
@@ -485,7 +695,12 @@
       "difficulty": "Medium",
       "description": "Rotate n×n matrix 90 degrees clockwise in-place with O(1) extra space.",
       "prompt": "Transpose then reverse rows for rotation",
-      "languages": ["python3", "node", "c"]
+      "languages": [
+        "python3",
+        "node",
+        "c"
+      ],
+      "requiresHiddenTests": true
     },
     {
       "id": 44,
@@ -493,7 +708,12 @@
       "difficulty": "Medium",
       "description": "Find longest palindromic substring using expand around center technique.",
       "prompt": "Expand from each center for O(n²) solution",
-      "languages": ["python3", "node", "c"]
+      "languages": [
+        "python3",
+        "node",
+        "c"
+      ],
+      "requiresHiddenTests": true
     },
     {
       "id": 45,
@@ -501,7 +721,12 @@
       "difficulty": "Hard",
       "description": "Find pattern occurrences in text using Knuth-Morris-Pratt algorithm with LPS array.",
       "prompt": "Build LPS array for O(n+m) pattern matching",
-      "languages": ["python3", "node", "c"]
+      "languages": [
+        "python3",
+        "node",
+        "c"
+      ],
+      "requiresHiddenTests": true
     }
   ]
 }

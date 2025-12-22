@@ -16,6 +16,7 @@ const { runWithPiston } = require('./executor/pistonExecutor');
 const { extractLogicFeatures } = require('./utils/logicFeatureExtractor');
 const { compareAgainstReference } = require('./utils/referenceLogicLoader');
 const { getReferenceLogic } = require('./utils/referenceLogicLoader');
+const { generateHiddenTestCases } = require('./utils/hiddenTestGenerator');
 const { generateFinalVerdict } = require('./utils/verdictEngine');
 
 
@@ -463,12 +464,51 @@ app.post(`${API_PREFIX}/submit`, async (req, res) => {
         })
       );
 
-      // Execute code against test cases (if available in reference logic)
-      const testCases = referenceLogic?.testCases || [];
+      // Execute code against reference + generated hidden test cases (no persistence)
+      const baseTestCases = Array.isArray(referenceLogic?.testCases)
+        ? referenceLogic.testCases
+        : [];
+
+      const hiddenTestCases = generateHiddenTestCases(referenceLogic, {
+        submissionId,
+        baseTestCases,
+        maxHidden: 500,
+      });
+
+      const testCases =
+        referenceLogic?.requiresHiddenTests === false
+          ? baseTestCases
+          : [...baseTestCases, ...hiddenTestCases];
+
+      console.info(
+        JSON.stringify({
+          submissionId,
+          event: 'test_execution_plan',
+          baseTests: baseTestCases.length,
+          hiddenTests: hiddenTestCases.length,
+          totalTests: testCases.length,
+          ts: new Date().toISOString(),
+        })
+      );
+
       const results = [];
 
       if (testCases.length > 0) {
         for (let i = 0; i < testCases.length; i++) {
+          // Log progress every 10 tests to track execution
+          if (i > 0 && i % 10 === 0) {
+            console.info(
+              JSON.stringify({
+                submissionId,
+                event: 'test_execution_progress',
+                completed: i,
+                total: testCases.length,
+                percentComplete: Math.round((i / testCases.length) * 100),
+                ts: new Date().toISOString(),
+              })
+            );
+          }
+
           try {
             const testCase = testCases[i];
             const result = await runWithPiston(
@@ -487,12 +527,14 @@ app.post(`${API_PREFIX}/submit`, async (req, res) => {
                 (testCase.expectedOutput || '').trim(),
               error: result.stderr || null,
               executionTimeMs: result.executionTimeMs || 0,
+              generated: Boolean(testCase.generated),
             });
           } catch (err) {
             results.push({
               testNumber: i + 1,
               error: String(err),
               passed: false,
+              generated: Boolean(testCases[i]?.generated),
             });
           }
         }

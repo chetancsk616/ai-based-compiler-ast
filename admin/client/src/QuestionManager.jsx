@@ -32,7 +32,11 @@ const QuestionManager = () => {
       if (!response.ok) throw new Error('Failed to fetch questions');
       
       const data = await response.json();
-      setQuestions(data.questions);
+      const normalized = (data.questions || []).map((q) => ({
+        ...q,
+        requiresHiddenTests: q?.requiresHiddenTests !== false,
+      }));
+      setQuestions(normalized);
     } catch (err) {
       console.error('Error:', err);
       setError(err.message);
@@ -149,6 +153,7 @@ const QuestionManager = () => {
                 <th className="px-6 py-3 text-left">Title</th>
                 <th className="px-6 py-3 text-left">Difficulty</th>
                 <th className="px-6 py-3 text-left">Tags</th>
+                <th className="px-6 py-3 text-left">Hidden Tests</th>
                 <th className="px-6 py-3 text-right">Actions</th>
               </tr>
             </thead>
@@ -174,6 +179,17 @@ const QuestionManager = () => {
                         </span>
                       ))}
                     </div>
+                  </td>
+                  <td className="px-6 py-4">
+                    <span
+                      className={`px-2 py-1 rounded text-xs ${
+                        q.requiresHiddenTests !== false
+                          ? 'bg-green-900/30 text-green-300'
+                          : 'bg-yellow-900/30 text-yellow-300'
+                      }`}
+                    >
+                      {q.requiresHiddenTests !== false ? 'Yes' : 'No'}
+                    </span>
                   </td>
                   <td className="px-6 py-4 text-right space-x-2">
                     <button
@@ -225,10 +241,22 @@ const QuestionModal = ({ question, onClose, onSave, currentUser, getIdToken }) =
     description: question?.description || '',
     difficulty: question?.difficulty || 'Medium',
     tags: question?.tags?.join(', ') || '',
-    testCases: JSON.stringify(question?.testCases || [], null, 2)
+    testCases: JSON.stringify(question?.testCases || [], null, 2),
+    requiresHiddenTests: question?.requiresHiddenTests !== false
   });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+
+  useEffect(() => {
+    setFormData({
+      title: question?.title || '',
+      description: question?.description || '',
+      difficulty: question?.difficulty || 'Medium',
+      tags: question?.tags?.join(', ') || '',
+      testCases: JSON.stringify(question?.testCases || [], null, 2),
+      requiresHiddenTests: question?.requiresHiddenTests !== false,
+    });
+  }, [question]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -246,7 +274,8 @@ const QuestionModal = ({ question, onClose, onSave, currentUser, getIdToken }) =
       const payload = {
         ...formData,
         tags: formData.tags.split(',').map(t => t.trim()).filter(Boolean),
-        testCases: JSON.parse(formData.testCases)
+        testCases: JSON.parse(formData.testCases),
+        requiresHiddenTests: formData.requiresHiddenTests !== false
       };
 
       const response = await fetch(url, {
@@ -330,6 +359,23 @@ const QuestionModal = ({ question, onClose, onSave, currentUser, getIdToken }) =
               placeholder="arrays, strings, dynamic-programming"
               className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:outline-none focus:border-blue-500"
             />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium mb-2">Require Hidden Testcases?</label>
+            <select
+              value={formData.requiresHiddenTests ? 'yes' : 'no'}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  requiresHiddenTests: e.target.value === 'yes',
+                })
+              }
+              className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:outline-none"
+            >
+              <option value="yes">Yes (default)</option>
+              <option value="no">No</option>
+            </select>
           </div>
 
           <div>
