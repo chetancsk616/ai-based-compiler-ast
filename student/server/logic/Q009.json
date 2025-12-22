@@ -9,6 +9,9 @@
   "expectedTimeComplexity": "O(V + E)",
   "expectedSpaceComplexity": "O(V)",
   "paradigm": "Graph Traversal",
+  "sampleLanguage": "python",
+  "sampleCode": "",
+  "expectedCode": "",
   "constraints": {
     "minLineCount": 10,
     "maxLineCount": 40,

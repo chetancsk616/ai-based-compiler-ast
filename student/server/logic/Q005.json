@@ -9,6 +9,9 @@
   "expectedTimeComplexity": "O(n)",
   "expectedSpaceComplexity": "O(1)",
   "paradigm": "Iterative",
+  "sampleLanguage": "python",
+  "sampleCode": "",
+  "expectedCode": "",
   "constraints": {
     "minLineCount": 4,
     "maxLineCount": 15,

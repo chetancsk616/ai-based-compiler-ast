@@ -9,6 +9,9 @@
   "expectedTimeComplexity": "O(n)",
   "expectedSpaceComplexity": "O(n)",
   "paradigm": "Dynamic Programming",
+  "sampleLanguage": "python",
+  "sampleCode": "",
+  "expectedCode": "",
   "constraints": {
     "minLineCount": 8,
     "maxLineCount": 30,

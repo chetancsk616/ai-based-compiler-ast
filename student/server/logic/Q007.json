@@ -9,6 +9,9 @@
   "expectedTimeComplexity": "O(n)",
   "expectedSpaceComplexity": "O(h)",
   "paradigm": "Tree Traversal",
+  "sampleLanguage": "python",
+  "sampleCode": "",
+  "expectedCode": "",
   "constraints": {
     "minLineCount": 5,
     "maxLineCount": 35,

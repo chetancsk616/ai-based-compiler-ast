@@ -10,6 +10,9 @@
   "expectedSpaceComplexity": "O(V)",
   "paradigm": "Graph Traversal",
   "constraints": {
+  "sampleLanguage": "python",
+  "sampleCode": "",
+  "expectedCode": "",
     "minLineCount": 10,
     "maxLineCount": 40,
     "shouldReadInput": true,
