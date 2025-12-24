@@ -3,7 +3,16 @@
  * Combines test results, rule-based logic comparison, AI logic verdict, and trust score
  * Generates a final comprehensive verdict object
  * No database writes in this module
+ * 
+ * PHASE 6: AI Justification Override Integration
+ * - AI validation triggers ONLY when logic marks are deducted
+ * - AI can ONLY restore marks, never reduce them
+ * - Level-aware policies (easy/medium/hard)
+ * - Full audit logging
  */
+
+const { validateLogicDeduction, shouldTriggerAIValidation } = require('../ai/aiJustificationValidator');
+const { logAIOverride } = require('./auditLogger');
 
 /**
  * Calculates trust score based on agreement between different verification methods
@@ -537,24 +546,30 @@ function generateRecommendations(
 
 /**
  * Main engine function - combines all verdict sources into final verdict object
+ * PHASE 6: Integrated with AI Justification Override
+ * 
  * @param {Object} params - Input parameters
  * @param {Object} params.ruleVerdictData - Results from rule-based logic comparison
  * @param {Object} params.aiVerdictData - Results from AI logic verification
  * @param {Object} params.testVerdictData - Results from test execution
  * @param {Array} params.securityViolations - Security events detected during submission
  * @param {Object} params.aiExplanation - AI-generated explanation of the verdict
- * @returns {Object} - Final verdict object
+ * @param {Object} params.questionData - Question metadata (for AI validation)
+ * @param {Object} params.submissionData - Submission metadata (for audit logging)
+ * @returns {Promise<Object>} - Final verdict object (now async for AI validation)
  */
-function generateFinalVerdict(params) {
+async function generateFinalVerdict(params) {
   const {
     ruleVerdictData,
     aiVerdictData,
     testVerdictData,
     securityViolations,
     aiExplanation,
+    questionData,
+    submissionData
   } = params;
 
-  // Calculate components
+  // Calculate components (deterministic scoring - ALWAYS computed first)
   const trustScore = calculateTrustScore(
     ruleVerdictData,
     aiVerdictData,
@@ -576,7 +591,7 @@ function generateFinalVerdict(params) {
     aiVerdictData,
     testVerdictData
   );
-  const aggregatedScore = calculateAggregatedScore(
+  let aggregatedScore = calculateAggregatedScore(
     ruleVerdictData,
     aiVerdictData,
     testVerdictData
@@ -588,6 +603,102 @@ function generateFinalVerdict(params) {
     aiVerdictData
   );
 
+  // Store original score before AI validation
+  const originalScore = aggregatedScore;
+  let aiOverrideData = null;
+
+  // PHASE 6: AI Justification Override (Post-Processing)
+  // Only triggers if:
+  // 1. Question data is provided
+  // 2. Tests passed
+  // 3. Algorithm match is PARTIAL
+  // 4. Score is in range (80-99)
+  if (questionData && shouldTriggerAIValidation({
+    ruleVerdictData,
+    testVerdictData,
+    finalScore: aggregatedScore
+  })) {
+    console.log('[Verdict Engine] Triggering AI justification validation...');
+    
+    try {
+      const aiValidation = await validateLogicDeduction({
+        questionLevel: questionData.difficulty || 'medium',
+        questionTitle: questionData.title || questionData.questionId,
+        expectedAlgorithm: questionData.expectedAlgorithm,
+        detectedIssues: issues.filter(i => i.source === 'rule-based'),
+        detectedWarnings: ruleVerdictData?.warnings || [],
+        timeComplexityMatch: ruleVerdictData?.timeComplexityMatch || false,
+        spaceComplexityMatch: ruleVerdictData?.spaceComplexityMatch || false,
+        expectedTimeComplexity: questionData.expectedTimeComplexity,
+        detectedTimeComplexity: ruleVerdictData?.detectedTimeComplexity,
+        expectedSpaceComplexity: questionData.expectedSpaceComplexity,
+        detectedSpaceComplexity: ruleVerdictData?.detectedSpaceComplexity,
+        testCasesPassed: testVerdictData?.passRate === 100,
+        testPassRate: testVerdictData?.passRate || 0,
+        logicDeduction: 100 - aggregatedScore, // Points deducted
+        algorithmMatch: ruleVerdictData?.algorithmMatch || 'PARTIAL'
+      });
+
+      aiOverrideData = aiValidation;
+
+      // If AI override is applied, restore marks
+      if (aiValidation.overrideApplied) {
+        const marksRestored = 100 - aggregatedScore;
+        aggregatedScore = 100; // Restore to full marks
+        
+        console.log('[Verdict Engine] AI override APPLIED - Marks restored:', marksRestored);
+        
+        // Add success message to strengths
+        strengths.push({
+          source: 'ai-justification',
+          severity: 'info',
+          type: 'marks_restored',
+          description: `AI validation: ${aiValidation.reason}`,
+          marksRestored
+        });
+
+        // Update issues to reflect override
+        issues.push({
+          source: 'ai-justification',
+          severity: 'info',
+          type: 'override_applied',
+          description: `Minor deviations waived for ${questionData.difficulty} level question`
+        });
+      } else {
+        console.log('[Verdict Engine] AI override NOT applied:', aiValidation.reason);
+      }
+
+      // Audit logging (if submission data provided)
+      if (submissionData) {
+        await logAIOverride({
+          submissionId: submissionData.submissionId || 'unknown',
+          userId: submissionData.userId,
+          userEmail: submissionData.userEmail,
+          questionId: questionData.questionId,
+          questionTitle: questionData.title,
+          questionLevel: questionData.difficulty,
+          initialScore: originalScore,
+          aiOverrideApplied: aiValidation.overrideApplied,
+          finalScore: aggregatedScore,
+          marksRestored: aiValidation.overrideApplied ? (100 - originalScore) : 0,
+          aiReason: aiValidation.reason,
+          aiDurationMs: aiValidation.durationMs,
+          mismatchTypes: aiValidation.input?.mismatchTypes || [],
+          testPassRate: testVerdictData?.passRate,
+          algorithmMatch: ruleVerdictData?.algorithmMatch
+        });
+      }
+    } catch (error) {
+      console.error('[Verdict Engine] AI validation error:', error.message);
+      // On error, keep original score (fail safely)
+      aiOverrideData = {
+        overrideApplied: false,
+        error: error.message,
+        reason: 'AI validation failed - keeping original score'
+      };
+    }
+  }
+
   // Build comprehensive verdict object
   return {
     // Final verdict - use both 'verdict' and 'decision' for compatibility
@@ -596,6 +707,16 @@ function generateFinalVerdict(params) {
     score: aggregatedScore,
     trustScore: trustScore,
     timestamp: new Date().toISOString(),
+
+    // PHASE 6: AI Override Information
+    aiOverride: aiOverrideData ? {
+      applied: aiOverrideData.overrideApplied,
+      originalScore: originalScore,
+      marksRestored: aiOverrideData.overrideApplied ? (aggregatedScore - originalScore) : 0,
+      reason: aiOverrideData.reason,
+      durationMs: aiOverrideData.durationMs,
+      mismatchTypes: aiOverrideData.input?.mismatchTypes || []
+    } : null,
 
     // Component verdicts
     components: {

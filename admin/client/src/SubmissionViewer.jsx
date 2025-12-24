@@ -3,6 +3,7 @@ import { useAuth } from './AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { Light as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { atomOneDark } from 'react-syntax-highlighter/dist/esm/styles/hljs';
+import { API_BASE_URL } from './config';
 
 const SubmissionViewer = () => {
   const { user, getIdToken } = useAuth();
@@ -26,7 +27,7 @@ const SubmissionViewer = () => {
       const token = await (getIdToken ? getIdToken() : user.getIdToken());
       const params = new URLSearchParams(filters);
       
-      const response = await fetch(`/api/admin/submissions?${params}`, {
+      const response = await fetch(`${API_BASE_URL}/api/admin/submissions?${params}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
 
@@ -44,14 +45,14 @@ const SubmissionViewer = () => {
   const viewSubmission = async (submissionId) => {
     try {
       const token = await (getIdToken ? getIdToken() : user.getIdToken());
-      const response = await fetch(`/api/admin/submissions/${submissionId}`, {
+      const response = await fetch(`${API_BASE_URL}/api/admin/submissions/${submissionId}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
 
       if (!response.ok) throw new Error('Failed to fetch submission');
       
       const data = await response.json();
-      setSelectedSubmission(data);
+      setSelectedSubmission(data.submission || data);
     } catch (err) {
       alert('Error loading submission: ' + err.message);
     }
@@ -70,12 +71,26 @@ const SubmissionViewer = () => {
       <header className="bg-gray-800 border-b border-gray-700 px-6 py-4">
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold">Submission Viewer</h1>
-          <button 
-            onClick={() => navigate('/admin')}
-            className="px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg transition"
-          >
-            ← Back
-          </button>
+          <div className="flex gap-3">
+            <button 
+              onClick={() => navigate('/admin/questions')}
+              className="px-4 py-2 bg-green-600 hover:bg-green-700 rounded-lg transition"
+            >
+              📝 Questions
+            </button>
+            <button 
+              onClick={() => navigate('/admin/users')}
+              className="px-4 py-2 bg-purple-600 hover:bg-purple-700 rounded-lg transition"
+            >
+              👥 Users
+            </button>
+            <button 
+              onClick={() => navigate('/admin')}
+              className="px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg transition"
+            >
+              ← Back
+            </button>
+          </div>
         </div>
       </header>
 

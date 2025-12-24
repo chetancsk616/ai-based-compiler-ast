@@ -93,25 +93,56 @@ export default function App() {
 
   // ============ HANDLERS ============
 
-  function handleSelectQuestion(question) {
+  async function handleSelectQuestion(question) {
     console.log('[Navigation] Selected question:', question.id, question.title);
     setCurrentQuestion(question);
     setCurrentPage('compiler');
 
-    // Start with empty editor (don't load previous saves)
+    // Determine language
     let savedLanguage = question.languages.includes(language)
       ? language
       : question.languages[0];
-
-    // Set defaults immediately
-    setCode(''); // Start fresh—no auto-restore
+    
     setLanguage(savedLanguage);
     setStdout('');
     setStderr('');
     setAiResponse('');
+
+    // Try to load saved code from Firestore
+    if (user) {
+      try {
+        const userQuestionRef = doc(
+          db,
+          'users',
+          user.uid,
+          'questions',
+          String(question.id)
+        );
+        const docSnap = await getDoc(userQuestionRef);
+        
+        if (docSnap.exists()) {
+          const savedData = docSnap.data();
+          console.log('[Navigation] Found saved code for question', question.id);
+          setCode(savedData.code || '');
+          if (savedData.language && question.languages.includes(savedData.language)) {
+            setLanguage(savedData.language);
+            savedLanguage = savedData.language;
+          }
+        } else {
+          console.log('[Navigation] No saved code found, starting fresh');
+          setCode('');
+        }
+      } catch (error) {
+        console.error('[Navigation] Error loading saved code:', error);
+        setCode('');
+      }
+    } else {
+      // Not logged in, start with empty code
+      setCode('');
+    }
+
     // Update URL to /codespace using navigate
     navigate(`/codespace?questionId=${question.id}&language=${savedLanguage}`);
-    // User can press Esc to manually enter fullscreen if desired
     console.log('[Navigation] Question loaded - Press Esc for fullscreen');
   }
 

@@ -10,12 +10,55 @@ const {
   revokeAdminAccess,
   adminAuth: admin,
 } = require('../middleware/adminAuth');
+const { getAuditStatistics, getRecentAuditLogs, getUserAuditLogs, getQuestionAuditLogs } = require('../utils/auditLogger');
+
+// Fetch users directly from Firebase Auth so the admin UI reflects real accounts
+async function fetchUsers(maxUsers = 500) {
+  if (!admin.apps.length) {
+    throw new Error('Firebase Admin not initialized');
+  }
+
+  const users = [];
+  let totalUsers = 0;
+  let nextPageToken;
+
+  do {
+    const result = await admin.auth().listUsers(1000, nextPageToken);
+    totalUsers += result.users.length;
+
+    for (const userRecord of result.users) {
+      if (users.length < maxUsers) {
+        const claims = userRecord.customClaims || {};
+        users.push({
+          id: userRecord.uid,
+          email: userRecord.email || 'unknown',
+          name: userRecord.displayName || userRecord.email?.split('@')[0] || 'N/A',
+          role: claims.admin ? 'admin' : 'user',
+          createdAt: userRecord.metadata?.creationTime || null,
+          lastSignInAt: userRecord.metadata?.lastSignInTime || null,
+          disabled: Boolean(userRecord.disabled),
+        });
+      }
+    }
+
+    nextPageToken = result.pageToken;
+  } while (nextPageToken);
+
+  return { users, totalUsers };
+}
 
 function getDb() {
   if (!admin.apps.length) {
     throw new Error('Firebase Admin not initialized');
   }
   return admin.database();
+}
+
+function getFirestore() {
+  if (!admin.apps.length) {
+    throw new Error('Firebase Admin not initialized');
+  }
+  return admin.firestore();
 }
 
 function normalizeQuestions(data) {
@@ -290,22 +333,44 @@ router.get('/submissions', async (req, res) => {
   try {
     const { userId, questionId, minScore, maxScore, limit = 100, offset = 0 } = req.query;
     
-    // In a real app, this would query Firestore
-    // For now, return mock data structure
-    const submissions = {
-      total: 0,
-      submissions: [],
-      message: 'Connect to Firestore to fetch actual submissions'
-    };
+    let query = getFirestore().collection('submissions');
     
-    // TODO: Implement Firestore query
-    // const snapshot = await admin.firestore()
-    //   .collection('submissions')
-    //   .limit(parseInt(limit))
-    //   .offset(parseInt(offset))
-    //   .get();
+    // Apply filters (ensure values are valid before querying)
+    if (userId && userId.trim()) {
+      query = query.where('userId', '==', userId);
+    }
+    if (questionId && !isNaN(parseInt(questionId))) {
+      query = query.where('questionId', '==', parseInt(questionId));
+    }
     
-    res.json({ success: true, ...submissions });
+    const parsedMinScore = parseFloat(minScore);
+    if (minScore && !isNaN(parsedMinScore)) {
+      query = query.where('score', '>=', parsedMinScore);
+    }
+    
+    const parsedMaxScore = parseFloat(maxScore);
+    if (maxScore && !isNaN(parsedMaxScore)) {
+      query = query.where('score', '<=', parsedMaxScore);
+    }
+    
+    // Order and paginate
+    query = query.orderBy('submittedAt', 'desc').limit(parseInt(limit));
+    
+    const snapshot = await query.get();
+    const submissions = [];
+    
+    snapshot.forEach(doc => {
+      submissions.push({
+        id: doc.id,
+        ...doc.data()
+      });
+    });
+    
+    res.json({ 
+      success: true, 
+      total: submissions.length,
+      submissions 
+    });
   } catch (error) {
     console.error('Error fetching submissions:', error);
     res.status(500).json({ error: 'Failed to fetch submissions' });
@@ -320,15 +385,24 @@ router.get('/submissions/:id', async (req, res) => {
   try {
     const submissionId = req.params.id;
     
-    // TODO: Implement Firestore fetch
-    // const doc = await admin.firestore()
-    //   .collection('submissions')
-    //   .doc(submissionId)
-    //   .get();
+    const doc = await getFirestore()
+      .collection('submissions')
+      .doc(submissionId)
+      .get();
+    
+    if (!doc.exists) {
+      return res.status(404).json({ 
+        success: false, 
+        error: 'Submission not found' 
+      });
+    }
     
     res.json({ 
       success: true, 
-      message: 'Connect to Firestore to fetch submission details' 
+      submission: {
+        id: doc.id,
+        ...doc.data()
+      }
     });
   } catch (error) {
     console.error('Error fetching submission:', error);
@@ -347,16 +421,17 @@ router.get('/submissions/:id', async (req, res) => {
 router.get('/users', async (req, res) => {
   try {
     const { limit = 100 } = req.query;
-    
-    // Read users from file (fallback)
-    const usersPath = path.join(__dirname, '../../client/users.json');
-    const usersData = await fs.readFile(usersPath, 'utf8');
-    const users = JSON.parse(usersData);
-    
+    const parsedLimit = Number(limit);
+    const maxUsers = Number.isFinite(parsedLimit)
+      ? Math.max(1, Math.min(parsedLimit, 1000))
+      : 100;
+
+    const { users, totalUsers } = await fetchUsers(maxUsers);
+
     res.json({ 
       success: true, 
-      users: users.slice(0, parseInt(limit)),
-      total: users.length 
+      users,
+      total: totalUsers
     });
   } catch (error) {
     console.error('Error fetching users:', error);
@@ -416,29 +491,103 @@ router.get('/stats', async (req, res) => {
   try {
     // Read questions count
     const { questions } = await readQuestions();
+    // Read users count from Firebase Auth
+    const { totalUsers } = await fetchUsers(1); // only count; list not needed
     
-    // Read users count
-    const usersPath = path.join(__dirname, '../../client/users.json');
-    const usersData = await fs.readFile(usersPath, 'utf8');
-    const users = JSON.parse(usersData);
+    // Get submission statistics from Firestore
+    const submissionsSnapshot = await getFirestore()
+      .collection('submissions')
+      .get();
+    
+    const totalSubmissions = submissionsSnapshot.size;
+    let totalScore = 0;
+    const recentActivity = [];
+    
+    submissionsSnapshot.forEach(doc => {
+      const data = doc.data();
+      if (data.score !== undefined) {
+        totalScore += data.score;
+      }
+      // Collect recent activity (latest 10)
+      if (recentActivity.length < 10) {
+        recentActivity.push({
+          id: doc.id,
+          userId: data.userId,
+          questionId: data.questionId,
+          score: data.score,
+          submittedAt: data.submittedAt
+        });
+      }
+    });
+    
+    const averageScore = totalSubmissions > 0 ? (totalScore / totalSubmissions).toFixed(2) : 0;
     
     const stats = {
       totalQuestions: questions.length,
-      totalUsers: users.length,
-      totalSubmissions: 0, // TODO: Query from Firestore
-      averageScore: 0, // TODO: Calculate from submissions
+      totalUsers,
+      totalSubmissions,
+      averageScore: parseFloat(averageScore),
       questionsByDifficulty: {
         Easy: questions.filter(q => q.difficulty === 'Easy').length,
         Medium: questions.filter(q => q.difficulty === 'Medium').length,
         Hard: questions.filter(q => q.difficulty === 'Hard').length
       },
-      recentActivity: [] // TODO: Fetch recent submissions
+      recentActivity: recentActivity.sort((a, b) => 
+        (b.submittedAt?.seconds || 0) - (a.submittedAt?.seconds || 0)
+      ).slice(0, 10)
     };
     
     res.json({ success: true, stats });
   } catch (error) {
     console.error('Error fetching stats:', error);
     res.status(500).json({ error: 'Failed to fetch statistics' });
+  }
+});
+
+// AI Override Audit Statistics
+router.get('/ai-audit/stats', authenticateUser, requireAdmin, async (req, res) => {
+  try {
+    const stats = getAuditStatistics();
+    res.json({ success: true, stats });
+  } catch (error) {
+    console.error('Error fetching AI audit stats:', error);
+    res.status(500).json({ error: 'Failed to fetch AI audit statistics' });
+  }
+});
+
+// Recent AI Override Audit Logs
+router.get('/ai-audit/logs', authenticateUser, requireAdmin, async (req, res) => {
+  try {
+    const limit = parseInt(req.query.limit) || 100;
+    const logs = getRecentAuditLogs(limit);
+    res.json({ success: true, logs, count: logs.length });
+  } catch (error) {
+    console.error('Error fetching AI audit logs:', error);
+    res.status(500).json({ error: 'Failed to fetch AI audit logs' });
+  }
+});
+
+// AI Override Audit Logs by User
+router.get('/ai-audit/user/:userId', authenticateUser, requireAdmin, async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const logs = getUserAuditLogs(userId);
+    res.json({ success: true, logs, count: logs.length, userId });
+  } catch (error) {
+    console.error('Error fetching user AI audit logs:', error);
+    res.status(500).json({ error: 'Failed to fetch user AI audit logs' });
+  }
+});
+
+// AI Override Audit Logs by Question
+router.get('/ai-audit/question/:questionId', authenticateUser, requireAdmin, async (req, res) => {
+  try {
+    const { questionId } = req.params;
+    const logs = getQuestionAuditLogs(questionId);
+    res.json({ success: true, logs, count: logs.length, questionId });
+  } catch (error) {
+    console.error('Error fetching question AI audit logs:', error);
+    res.status(500).json({ error: 'Failed to fetch question AI audit logs' });
   }
 });
 

@@ -19,6 +19,35 @@ const { getReferenceLogic } = require('./utils/referenceLogicLoader');
 const { generateHiddenTestCases } = require('./utils/hiddenTestGenerator');
 const { generateFinalVerdict } = require('./utils/verdictEngine');
 
+// Initialize Firebase Admin for Firestore
+const admin = require('firebase-admin');
+
+// Initialize Firebase Admin if not already initialized
+if (!admin.apps.length) {
+  try {
+    const serviceAccountPath = path.resolve(__dirname, '../../aicompiler-45c59-firebase-adminsdk-fbsvc-cb7b106f14.json');
+    if (fs.existsSync(serviceAccountPath)) {
+      const serviceAccount = require(serviceAccountPath);
+      admin.initializeApp({
+        credential: admin.credential.cert(serviceAccount),
+        databaseURL: 'https://aicompiler-45c59-default-rtdb.firebaseio.com'
+      });
+      console.info('✅ Firebase Admin initialized successfully');
+    } else {
+      console.warn('⚠️ Firebase service account file not found at:', serviceAccountPath);
+    }
+  } catch (err) {
+    console.error('❌ Failed to initialize Firebase Admin:', err);
+  }
+}
+
+function getFirestore() {
+  if (!admin.apps.length) {
+    throw new Error('Firebase Admin not initialized');
+  }
+  return admin.firestore();
+}
+
 
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -838,6 +867,61 @@ Be specific, educational, and constructive. Reference actual test cases, complex
         decision: finalVerdict?.decision || 'ERROR',
       })
     );
+
+    // ===== SAVE TO FIRESTORE =====
+    try {
+      if (admin.apps.length) {
+        const submissionDoc = {
+          userId,
+          userEmail: email,
+          questionId: parseInt(questionId),
+          questionTitle: referenceLogic?.title || 'Unknown',
+          language,
+          code,
+          score: finalVerdict?.score || 0,
+          decision: finalVerdict?.decision || 'ERROR',
+          trustScore: finalVerdict?.trustScore || 0,
+          testResults: {
+            totalTests: testResults?.totalTests || 0,
+            passedTests: testResults?.passedTests || 0,
+            passRate: testResults?.passRate || 0,
+          },
+          logicComparison: logicComparison ? {
+            algorithmMatch: logicComparison.algorithmMatch || false,
+            complexityMatch: logicComparison.complexityMatch || false,
+            overallMatch: logicComparison.overallMatch || false,
+          } : null,
+          submittedAt: admin.firestore.FieldValue.serverTimestamp(),
+          timestamp: new Date().toISOString(),
+          securityEvents: securityEvents || [],
+        };
+
+        await getFirestore()
+          .collection('submissions')
+          .doc(submissionId)
+          .set(submissionDoc);
+
+        console.info(
+          JSON.stringify({
+            submissionId,
+            event: 'firestore_save_success',
+            ts: new Date().toISOString(),
+          })
+        );
+      } else {
+        console.warn('Firebase not initialized - submission not saved to Firestore');
+      }
+    } catch (firestoreErr) {
+      console.error(
+        JSON.stringify({
+          submissionId,
+          event: 'firestore_save_error',
+          ts: new Date().toISOString(),
+          error: String(firestoreErr),
+        })
+      );
+      // Don't fail the request if Firestore save fails
+    }
 
     // Send response
     res.json(evaluationResult);

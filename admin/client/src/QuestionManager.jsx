@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from './AuthContext';
 import { useNavigate } from 'react-router-dom';
 import LogoutConfirmModal from './components/LogoutConfirmModal';
+import { API_BASE_URL } from './config';
 
 const QuestionManager = () => {
   const { user, getIdToken, logout } = useAuth();
@@ -25,7 +26,7 @@ const QuestionManager = () => {
       const params = new URLSearchParams();
       if (difficultyFilter) params.append('difficulty', difficultyFilter);
       
-      const response = await fetch(`/api/admin/questions?${params}`, {
+      const response = await fetch(`${API_BASE_URL}/api/admin/questions?${params}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
 
@@ -60,7 +61,7 @@ const QuestionManager = () => {
 
     try {
       const token = await (getIdToken ? getIdToken() : user.getIdToken());
-      const response = await fetch(`/api/admin/questions/${questionId}`, {
+      const response = await fetch(`${API_BASE_URL}/api/admin/questions/${questionId}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -107,16 +108,22 @@ const QuestionManager = () => {
               ➕ Add Question
             </button>
             <button 
+              onClick={() => navigate('/admin/submissions')}
+              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg transition"
+            >
+              📊 View Submissions
+            </button>
+            <button 
+              onClick={() => navigate('/admin/users')}
+              className="px-4 py-2 bg-purple-600 hover:bg-purple-700 rounded-lg transition"
+            >
+              👥 Manage Users
+            </button>
+            <button 
               onClick={() => setShowLogoutConfirm(true)}
               className="px-4 py-2 bg-red-600 hover:bg-red-700 rounded-lg transition"
             >
               🚪 Logout
-            </button>
-            <button 
-              onClick={() => navigate('/admin')}
-              className="px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg transition"
-            >
-              ← Back
             </button>
           </div>
         </div>
@@ -266,8 +273,8 @@ const QuestionModal = ({ question, onClose, onSave, currentUser, getIdToken }) =
     try {
       const token = await (getIdToken ? getIdToken() : currentUser.getIdToken());
       const url = question 
-        ? `/api/admin/questions/${question.id}`
-        : '/api/admin/questions';
+        ? `${API_BASE_URL}/api/admin/questions/${question.id}`
+        : `${API_BASE_URL}/api/admin/questions`;
       
       const method = question ? 'PUT' : 'POST';
       

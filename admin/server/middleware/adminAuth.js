@@ -61,6 +61,7 @@ async function authenticateUser(req, res, next) {
     const authHeader = req.headers.authorization;
     
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      console.log('[Auth] No auth header or invalid format');
       return res.status(401).json({ 
         error: 'Unauthorized', 
         message: 'No authentication token provided' 
@@ -79,9 +80,10 @@ async function authenticateUser(req, res, next) {
       emailVerified: decodedToken.email_verified
     };
     
+    console.log('[Auth] User authenticated:', req.user.email);
     next();
   } catch (error) {
-    console.error('Authentication error:', error);
+    console.error('[Auth] Authentication error:', error.message);
     return res.status(401).json({ 
       error: 'Unauthorized', 
       message: 'Invalid or expired token' 
@@ -96,6 +98,7 @@ async function requireAdmin(req, res, next) {
   try {
     // First ensure user is authenticated
     if (!req.user) {
+      console.log('[Admin] No user in request');
       return res.status(401).json({ 
         error: 'Unauthorized', 
         message: 'Authentication required' 
@@ -106,33 +109,36 @@ async function requireAdmin(req, res, next) {
     
     // Check email whitelist first (always works)
     const isWhitelisted = ADMIN_EMAILS.includes(req.user.email);
+    console.log('[Admin] Checking admin for:', req.user.email, 'Whitelisted:', isWhitelisted);
     
     // Check Firebase custom claims if Admin SDK is initialized
     if (admin.apps.length > 0) {
       try {
         const userRecord = await admin.auth().getUser(req.user.uid);
         isAdmin = userRecord.customClaims?.admin === true;
+        console.log('[Admin] Custom claims admin:', isAdmin);
       } catch (err) {
-        console.warn('Could not check custom claims:', err.message);
+        console.warn('[Admin] Could not check custom claims:', err.message);
       }
     }
     
     if (!isAdmin && !isWhitelisted) {
+      console.log('[Admin] Access denied for:', req.user.email);
       return res.status(403).json({ 
         error: 'Forbidden', 
         message: 'Admin access required' 
       });
     }
     
+    console.log('[Admin] Access granted to:', req.user.email);
     // Attach admin flag to request
     req.user.isAdmin = true;
-    
     next();
   } catch (error) {
-    console.error('Admin authorization error:', error);
-    return res.status(403).json({ 
-      error: 'Forbidden', 
-      message: 'Unable to verify admin status' 
+    console.error('[Admin] Error in requireAdmin:', error);
+    return res.status(500).json({ 
+      error: 'Internal server error',
+      message: 'Failed to verify admin privileges'
     });
   }
 }
