@@ -120,6 +120,12 @@ const QuestionManager = () => {
               👥 Manage Users
             </button>
             <button 
+              onClick={() => navigate('/admin/permissions')}
+              className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 rounded-lg transition"
+            >
+              🔐 Permissions
+            </button>
+            <button 
               onClick={() => setShowLogoutConfirm(true)}
               className="px-4 py-2 bg-red-600 hover:bg-red-700 rounded-lg transition"
             >

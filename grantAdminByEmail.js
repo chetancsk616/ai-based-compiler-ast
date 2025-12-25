@@ -57,5 +57,5 @@ async function grantAdminAccess(emails) {
   }
 }
 
-const emails = ['admin@test.com', 'srinivaschetan7@gmail.com'];
+const emails = ['admin@test.com', 'srinivaschetan7@gmail.com', 'kutikuppala.chetan2023@vitstudent.ac.in'];
 grantAdminAccess(emails);

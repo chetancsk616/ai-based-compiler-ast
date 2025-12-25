@@ -4,6 +4,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import QuestionManager from './QuestionManager.jsx';
 import SubmissionViewer from './SubmissionViewer.jsx';
 import UserManager from './UserManager.jsx';
+import PermissionManager from './PermissionManager.jsx';
 import ProtectedAdminRoute from './components/ProtectedAdminRoute.jsx';
 import { AuthProvider } from './AuthContext.jsx';
 import './index.css';
@@ -53,6 +54,14 @@ ReactDOM.createRoot(document.getElementById('root')).render(
             element={
               <ProtectedAdminRoute>
                 <UserManager />
+              </ProtectedAdminRoute>
+            } 
+          />
+          <Route 
+            path="/admin/permissions" 
+            element={
+              <ProtectedAdminRoute>
+                <PermissionManager />
               </ProtectedAdminRoute>
             } 
           />

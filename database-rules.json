@@ -1,0 +1,55 @@
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+    
+    "questions": {
+      ".read": "auth != null && (auth.token.role == 'admin' || root.child('userPermissions').child(auth.uid).child('canReadQuestions').val() == true)",
+      ".write": "auth != null && (auth.token.role == 'admin' || root.child('userPermissions').child(auth.uid).child('canWriteQuestions').val() == true)",
+      "$questionId": {
+        ".read": "auth != null && (auth.token.role == 'admin' || root.child('userPermissions').child(auth.uid).child('canReadQuestions').val() == true)",
+        ".write": "auth != null && (auth.token.role == 'admin' || root.child('userPermissions').child(auth.uid).child('canWriteQuestions').val() == true)"
+      }
+    },
+    
+    "submissions": {
+      ".read": "auth != null && (auth.token.role == 'admin' || root.child('userPermissions').child(auth.uid).child('canReadAllSubmissions').val() == true)",
+      ".write": false,
+      "$userId": {
+        ".read": "auth != null && (auth.token.role == 'admin' || auth.uid == $userId || root.child('userPermissions').child(auth.uid).child('canReadAllSubmissions').val() == true)",
+        ".write": "auth != null && auth.uid == $userId",
+        "$submissionId": {
+          ".read": "auth != null && (auth.token.role == 'admin' || auth.uid == $userId || root.child('userPermissions').child(auth.uid).child('canReadAllSubmissions').val() == true)",
+          ".write": "auth != null && auth.uid == $userId"
+        }
+      }
+    },
+    
+    "users": {
+      ".read": "auth != null && (auth.token.role == 'admin' || root.child('userPermissions').child(auth.uid).child('canManageUsers').val() == true)",
+      ".write": "auth != null && auth.token.role == 'admin'",
+      "$userId": {
+        ".read": "auth != null && (auth.token.role == 'admin' || auth.uid == $userId || root.child('userPermissions').child(auth.uid).child('canManageUsers').val() == true)",
+        ".write": "auth != null && auth.token.role == 'admin'"
+      }
+    },
+    
+    "userPermissions": {
+      ".read": "auth != null && auth.token.role == 'admin'",
+      ".write": "auth != null && auth.token.role == 'admin'",
+      "$userId": {
+        ".read": "auth != null && (auth.token.role == 'admin' || auth.uid == $userId)",
+        ".write": "auth != null && auth.token.role == 'admin'"
+      }
+    },
+    
+    "auditLogs": {
+      ".read": "auth != null && auth.token.role == 'admin'",
+      ".write": "auth != null && auth.token.role == 'admin'",
+      "$logId": {
+        ".read": "auth != null && auth.token.role == 'admin'",
+        ".write": "auth != null && auth.token.role == 'admin'"
+      }
+    }
+  }
+}

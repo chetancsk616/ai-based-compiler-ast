@@ -11,6 +11,16 @@ const {
   adminAuth: admin,
 } = require('../middleware/adminAuth');
 const { getAuditStatistics, getRecentAuditLogs, getUserAuditLogs, getQuestionAuditLogs } = require('../utils/auditLogger');
+const {
+  PERMISSIONS,
+  DEFAULT_PERMISSIONS,
+  getUserPermissions,
+  setUserPermissions,
+  grantPermission,
+  revokePermission,
+  applyPermissionPreset,
+  getAllUsersWithPermissions,
+} = require('../utils/permissionManager');
 
 // Fetch users directly from Firebase Auth so the admin UI reflects real accounts
 async function fetchUsers(maxUsers = 500) {
@@ -588,6 +598,109 @@ router.get('/ai-audit/question/:questionId', authenticateUser, requireAdmin, asy
   } catch (error) {
     console.error('Error fetching question AI audit logs:', error);
     res.status(500).json({ error: 'Failed to fetch question AI audit logs' });
+  }
+});
+
+// ============================================================================
+// PERMISSION MANAGEMENT ROUTES
+// ============================================================================
+
+// Get all available permissions
+router.get('/permissions/available', authenticateUser, requireAdmin, async (req, res) => {
+  try {
+    res.json({ 
+      success: true, 
+      permissions: PERMISSIONS,
+      presets: DEFAULT_PERMISSIONS 
+    });
+  } catch (error) {
+    console.error('Error fetching available permissions:', error);
+    res.status(500).json({ error: 'Failed to fetch permissions' });
+  }
+});
+
+// Get permissions for a specific user
+router.get('/permissions/user/:userId', authenticateUser, requireAdmin, async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const permissions = await getUserPermissions(userId);
+    res.json({ success: true, ...permissions });
+  } catch (error) {
+    console.error('Error fetching user permissions:', error);
+    res.status(500).json({ error: 'Failed to fetch user permissions' });
+  }
+});
+
+// Get all users with their permissions
+router.get('/users-with-permissions', authenticateUser, requireAdmin, async (req, res) => {
+  try {
+    const maxUsers = parseInt(req.query.maxUsers) || 500;
+    const users = await getAllUsersWithPermissions(maxUsers);
+    res.json({ success: true, users, count: users.length });
+  } catch (error) {
+    console.error('Error fetching users with permissions:', error);
+    res.status(500).json({ error: 'Failed to fetch users with permissions' });
+  }
+});
+
+// Set permissions for a user
+router.post('/permissions/user/:userId', authenticateUser, requireAdmin, async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const { permissions } = req.body;
+    const adminUserId = req.user.uid;
+    
+    if (!permissions || typeof permissions !== 'object') {
+      return res.status(400).json({ error: 'Permissions object is required' });
+    }
+    
+    const updatedPermissions = await setUserPermissions(userId, permissions, adminUserId);
+    res.json({ success: true, permissions: updatedPermissions });
+  } catch (error) {
+    console.error('Error setting user permissions:', error);
+    res.status(500).json({ error: 'Failed to set user permissions' });
+  }
+});
+
+// Grant a specific permission to a user
+router.post('/permissions/user/:userId/grant/:permission', authenticateUser, requireAdmin, async (req, res) => {
+  try {
+    const { userId, permission } = req.params;
+    const adminUserId = req.user.uid;
+    
+    const updatedPermissions = await grantPermission(userId, permission, adminUserId);
+    res.json({ success: true, permissions: updatedPermissions });
+  } catch (error) {
+    console.error('Error granting permission:', error);
+    res.status(500).json({ error: error.message || 'Failed to grant permission' });
+  }
+});
+
+// Revoke a specific permission from a user
+router.post('/permissions/user/:userId/revoke/:permission', authenticateUser, requireAdmin, async (req, res) => {
+  try {
+    const { userId, permission } = req.params;
+    const adminUserId = req.user.uid;
+    
+    const updatedPermissions = await revokePermission(userId, permission, adminUserId);
+    res.json({ success: true, permissions: updatedPermissions });
+  } catch (error) {
+    console.error('Error revoking permission:', error);
+    res.status(500).json({ error: error.message || 'Failed to revoke permission' });
+  }
+});
+
+// Apply a permission preset (student, teacher, admin) to a user
+router.post('/permissions/user/:userId/preset/:presetName', authenticateUser, requireAdmin, async (req, res) => {
+  try {
+    const { userId, presetName } = req.params;
+    const adminUserId = req.user.uid;
+    
+    const updatedPermissions = await applyPermissionPreset(userId, presetName, adminUserId);
+    res.json({ success: true, permissions: updatedPermissions, preset: presetName });
+  } catch (error) {
+    console.error('Error applying permission preset:', error);
+    res.status(500).json({ error: error.message || 'Failed to apply permission preset' });
   }
 });
 
