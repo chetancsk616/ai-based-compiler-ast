@@ -20,6 +20,7 @@
     "build:admin": "cd admin/client && npm run build",
     "build:student": "cd student/client && npm run build",
     "start": "concurrently \"npm run start:login\" \"npm run start:admin\" \"npm run start:student\"",
+    "start:prod": "cd admin/server && npm start",
     "start:login": "cd login && npm run preview",
     "start:admin": "cd admin/server && npm start",
     "start:student": "cd student/server && npm start",

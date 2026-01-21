@@ -7,8 +7,8 @@ services:
     plan: free # Change to 'starter' or 'standard' for production
     branch: main
     rootDir: .
-    buildCommand: npm install && npm run build
-    startCommand: npm run start
+    buildCommand: npm install --workspaces --include-workspace-root && npm run build
+    startCommand: npm run start:prod
     healthCheckPath: /api/health
     envVars:
       - key: NODE_ENV
